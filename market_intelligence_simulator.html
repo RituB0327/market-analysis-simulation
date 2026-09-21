@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Intelligence Simulator</title>
+<style>
+:root{--bg:#0b1220;--card:#111c2e;--card2:#17243a;--text:#f3f6fb;--muted:#9eacc2;--accent:#22d3ee;--green:#34d399;--border:#2b3b55;--danger:#fb7185}
+*{box-sizing:border-box}body{margin:0;font-family:Arial, sans-serif;background:linear-gradient(135deg,#08111f,#13243c);color:var(--text)}
+.container{width:min(1200px,94%);margin:25px auto}.header,.panel,.stat{background:rgba(17,28,46,.96);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 35px #0003}
+.header{padding:22px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:14px;background:var(--accent);color:#06202a;display:grid;place-items:center;font-size:25px;font-weight:bold}
+h1,h2,h3{margin:0 0 8px}.muted{color:var(--muted);font-size:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.tab,button{cursor:pointer;border:1px solid var(--border);border-radius:9px;padding:11px 15px;background:var(--card2);color:var(--text);font-weight:600}.tab.active,button.primary{background:var(--accent);color:#06202a;border-color:var(--accent)}
+.page{margin-top:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.stat{padding:18px}.value{font-size:28px;font-weight:bold;margin-top:10px;color:var(--accent)}.panel{padding:20px;margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:bold;margin:12px 0 6px}input,select{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);background:#0b1525;color:var(--text);font-size:14px}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.notice{padding:12px;border:1px solid var(--border);border-radius:9px;background:#123047;color:#b8f4ff;margin:12px 0}
+table{width:100%;border-collapse:collapse;min-width:700px}th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--border);font-size:13px}th{color:var(--muted);font-size:12px}.table-wrap{overflow:auto}.badge{display:inline-block;border:1px solid var(--border);border-radius:20px;padding:5px 9px;font-size:11px}.success{color:var(--green)}.danger{color:var(--danger)}.hidden{display:none!important}.bar{height:12px;background:#26364e;border-radius:20px;overflow:hidden;margin:8px 0 18px}.bar span{display:block;height:100%;background:var(--accent)}.login{max-width:450px;margin:70px auto}.small{font-size:12px;color:var(--muted)}.right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}@media(max-width:480px){.container{width:96%}.stats{gap:8px}.stat{padding:12px}.value{font-size:22px}.panel{padding:15px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div style="text-align:center;font-size:26px;font-weight:800;letter-spacing:3px;color:var(--accent);margin:18px 0 8px">SBUP</div>
+
+<section id="loginPage" class="panel login" style="display:none!important">
+  <div class="brand"><div class="logo">M</div><div><h2>Market Intelligence</h2><div class="muted">TAM • SAM • SOM Simulator</div></div></div>
+  <div class="notice" style="margin-top:22px">SBUP Venture Market Intelligence Portal</div>
+
+  <div id="loginBox">
+    <h3 style="margin-top:25px">Login</h3>
+    <p class="muted">Login to manage your venture and access market analysis.</p>
+    <form id="combinedLoginForm">
+      <label>Email</label><input id="combinedEmail" type="email" required>
+      <label>Password</label><input id="combinedPassword" type="password" required>
+      <button class="primary" style="width:100%;margin-top:18px">Login</button>
+    </form>
+    <p class="small" style="margin-top:15px">New user? Create your venture account below.</p>
+    <button type="button" id="showRegister" style="width:100%">Register New Venture</button>
+    <p class="small" style="margin-top:15px">Admin login: admin@marketdemo.com / admin123</p>
+    <div id="loginError" class="danger"></div>
+  </div>
+
+  <div id="registerBox" class="hidden">
+    <h3 style="margin-top:25px">Register Your Venture</h3>
+    <p class="muted">Add your venture details and 2 or 3 team members.</p>
+    <form id="registerForm">
+      <label>Venture Name</label><input id="ventureName" required>
+      <label>Primary User Name</label><input id="primaryName" required>
+      <label>Primary User Email</label><input id="primaryEmail" type="email" required>
+      <label>Password</label><input id="primaryPassword" type="password" minlength="6" required>
+      <label>City</label><input id="ventureCity" value="Pune" required>
+      <label>Number of Members</label>
+      <select id="memberCount" required><option value="2">2 Members</option><option value="3">3 Members</option></select>
+      <div id="memberFields"></div>
+      <button class="primary" style="width:100%;margin-top:18px">Create Venture Account</button>
+    </form>
+    <button type="button" id="backToLogin" style="width:100%;margin-top:10px">Back to Login</button>
+    <div id="registerMessage" class="notice hidden"></div>
+  </div>
+</section>
+
+<section id="appPage">
+<header class="header">
+  <div class="brand"><div class="logo">M</div><div><div class="small" style="color:var(--accent);font-weight:bold;letter-spacing:2px">SBUP</div><h1>Market Intelligence</h1><div class="muted">Venture market sizing and management</div></div></div>
+  <div class="right"><span id="roleBadge" class="badge success">Logged in</span><button id="logout">Logout</button></div>
+</header>
+<div class="tabs">
+  <button class="tab active" data-page="dashboard">Market Analysis</button>
+  <button class="tab" data-page="analysis" id="analysisTab">Analysis</button>
+  <button class="tab hidden" data-page="users" id="usersTab">All Users & Ventures</button>
+  <button class="tab" data-page="add" id="addTab">My Venture</button>
+</div>
+
+<div id="dashboard" class="page">
+  <div class="panel">
+    <h2>Business Market Analysis</h2><p class="muted">Enter your business assumptions to calculate TAM, SAM and SOM.</p>
+    <form id="marketForm">
+      <div class="grid">
+        <div><label>Business / Product Name</label><input id="business" value="SignBridge" required></div>
+        <div><label>Market Area</label><select id="area"><option>Maharashtra</option><option>India</option><option>Global</option><option>Custom Region</option></select>
+          <input id="customArea" placeholder="Enter region name" class="hidden" style="margin-top:8px"></div>
+        <div><label>Total Potential Customers</label><input id="customers" type="number" value="473271" min="0" required></div>
+        <div><label>Annual Revenue per Customer (₹)</label><input id="price" type="number" value="1200" min="0" required></div>
+        <div><label>SAM Percentage</label><input id="samPercent" type="number" value="30" min="0" max="100" step="0.1" required></div>
+        <div><label>SOM Percentage</label><input id="somPercent" type="number" value="5" min="0" max="100" step="0.1" required></div>
+      </div>
+      <div class="form-actions"><button class="primary">Calculate Market Size</button><button type="button" id="downloadReport">Download Market Report</button></div>
+    </form>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="muted">TAM</div><div class="value" id="tam">₹0</div><div class="small" id="tamUsers"></div></div>
+    <div class="stat"><div class="muted">SAM</div><div class="value" id="sam">₹0</div><div class="small" id="samUsers"></div></div>
+    <div class="stat"><div class="muted">SOM</div><div class="value" id="som">₹0</div><div class="small" id="somUsers"></div></div>
+    <div class="stat"><div class="muted">SOM Share</div><div class="value" id="share">0%</div><div class="small">Of SAM</div></div>
+  </div>
+  <div class="panel" style="margin-top:16px"><h3>Market Opportunity</h3>
+    <p class="muted">TAM</p><div class="bar"><span id="tamBar" style="width:100%"></span></div>
+    <p class="muted">SAM</p><div class="bar"><span id="samBar"></span></div>
+    <p class="muted">SOM</p><div class="bar"><span id="somBar"></span></div>
+    <div id="calculation" class="notice"></div>
+  </div>
+</div>
+
+<div id="analysis" class="page hidden">
+  <div class="panel">
+    <div class="right" style="justify-content:space-between"><div><h2>Market Analysis Records</h2><p class="muted">Every TAM, SAM and SOM calculation you run is recorded here.</p></div><div class="right"><button id="analysisCsvBtn" class="primary">Download CSV</button><button type="button" id="clearAnalysisBtn">Clear All</button></div></div>
+    <div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>#</th><th>Date</th><th>Business</th><th>Area</th><th>Customers</th><th>Price/Customer</th><th>SAM %</th><th>SOM %</th><th>TAM</th><th>SAM</th><th>SOM</th></tr></thead><tbody id="analysisTable"></tbody></table></div>
+    <p id="analysisEmpty" class="muted hidden">No analysis recorded yet. Calculate a market size to add one.</p>
+  </div>
+</div>
+
+<div id="users" class="page hidden">
+  <div class="panel">
+    <div class="right" style="justify-content:space-between"><div><h2>Users Database</h2><p class="muted">Only admin can view all registered users, venture names and team members.</p></div><div class="right"><button id="csvBtn" class="primary">Download CSV</button><button id="jsonBtn">Download JSON</button></div></div>
+    <label>Search users</label><input id="search" placeholder="Search by name, email, city or plan">
+    <div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Venture</th><th>Members</th><th>Category</th><th>Phone</th><th>City</th><th>Plan</th><th>Status</th></tr></thead><tbody id="userTable"></tbody></table></div>
+    <p id="empty" class="muted hidden">No users found.</p>
+  </div>
+</div>
+
+<div id="add" class="page hidden">
+  <div class="panel">
+    <h2>My Venture</h2><p class="muted">View or manage your venture details and team members.</p>
+    <form id="addForm">
+      <div class="grid">
+        <div><label>Venture Name</label><input id="newVenture" required></div>
+        <div><label>Number of Members</label><select id="newMemberCount" required><option value="2">2 Members</option><option value="3">3 Members</option></select></div>
+        <div><label>Member 1 Name</label><input id="newMember1" required></div>
+        <div><label>Member 2 Name</label><input id="newMember2" required></div>
+        <div id="newMember3Wrap" class="hidden"><label>Member 3 Name</label><input id="newMember3"></div>
+        <div><label>Category</label><input id="newCategory" placeholder="e.g. EdTech, HealthTech, FinTech" required></div>
+        <div><label>Email</label><input id="newEmail" type="email" required></div>
+        <div><label>City</label><input id="newCity" value="Pune" required></div>
+      </div>
+      <button class="primary" style="margin-top:18px">Save Venture</button>
+    </form>
+    <div id="addMessage" class="notice hidden"></div>
+  </div>
+</div>
+</section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let users=JSON.parse(localStorage.getItem('mi_users')||'[]');
+let analyses=JSON.parse(localStorage.getItem('mi_analyses')||'[]');
+function saveUsers(){localStorage.setItem('mi_users',JSON.stringify(users))}
+function saveAnalyses(){localStorage.setItem('mi_analyses',JSON.stringify(analyses))}
+let lastReport={};
+let currentUser=null;
+let currentRole='admin';
+
+
+function money(n){if(n>=10000000)return '₹'+(n/10000000).toFixed(2)+' Cr';if(n>=100000)return '₹'+(n/100000).toFixed(2)+' Lakh';return '₹'+Math.round(n).toLocaleString('en-IN')}
+function areaValue(){return $('area').value==='Custom Region'?($('customArea').value.trim()||'Custom Region'):$('area').value}
+function calculate(){
+ const pop=Number($('customers').value),price=Number($('price').value),sp=Number($('samPercent').value),op=Number($('somPercent').value);
+ if(pop<0||price<0||sp<0||sp>100||op<0||op>100)return;
+ const tam=pop*price,samUsers=pop*sp/100,somUsers=samUsers*op/100,sam=samUsers*price,som=somUsers*price;
+ $('tam').textContent=money(tam);$('sam').textContent=money(sam);$('som').textContent=money(som);$('share').textContent=op+'%';
+ $('tamUsers').textContent=pop.toLocaleString('en-IN')+' customers';$('samUsers').textContent=Math.round(samUsers).toLocaleString('en-IN')+' customers';$('somUsers').textContent=Math.round(somUsers).toLocaleString('en-IN')+' customers';
+ $('samBar').style.width=sp+'%';$('somBar').style.width=(sp*op/100)+'%';
+ $('calculation').innerHTML='<b>'+esc($('business').value)+'</b> · '+esc(areaValue())+'<br>TAM = '+pop.toLocaleString('en-IN')+' × ₹'+price.toLocaleString('en-IN')+' = '+money(tam)+'<br>SAM = '+sp+'% of TAM = '+money(sam)+'<br>SOM = '+op+'% of SAM = '+money(som);
+ lastReport={business:$('business').value,area:areaValue(),customers:pop,annualPrice:price,samPercent:sp,somPercent:op,tam,sam,som,samUsers,somUsers};
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function recordAnalysis(){
+ analyses.push({...lastReport,date:new Date().toLocaleString('en-IN')});
+ saveAnalyses();
+ renderAnalysis();
+}
+function renderAnalysis(){
+ $('analysisTable').innerHTML=analyses.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.date||'')}</td><td>${esc(a.business||'')}</td><td>${esc(a.area||'')}</td><td>${(a.customers||0).toLocaleString('en-IN')}</td><td>₹${(a.annualPrice||0).toLocaleString('en-IN')}</td><td>${a.samPercent}%</td><td>${a.somPercent}%</td><td>${money(a.tam||0)}</td><td>${money(a.sam||0)}</td><td>${money(a.som||0)}</td></tr>`).join('');
+ $('analysisEmpty').classList.toggle('hidden',analyses.length>0);
+}
+function analysisCsvDownload(){
+ const fields=['date','business','area','customers','annualPrice','samPercent','somPercent','tam','sam','som'];
+ const rows=[fields.join(','),...analyses.map(a=>fields.map(f=>'"'+String(a[f]??'').replace(/"/g,'""')+'"').join(','))];
+ download('market-analysis.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+}
+function renderUsers(){
+ const q=$('search').value.toLowerCase();
+ const list=users.filter(u=>(u.name+' '+u.email+' '+u.city+' '+u.plan+' '+u.status+' '+u.venture+' '+(u.category||'')+' '+u.members.join(' ')).toLowerCase().includes(q));
+ $('userTable').innerHTML=list.map(u=>`<tr><td>${u.id}</td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.venture||'')}</td><td>${esc((u.members||[]).join(', '))}</td><td>${esc(u.category||'')}</td><td>${esc(u.phone||'')}</td><td>${esc(u.city||'')}</td><td><span class="badge">${u.plan||''}</span></td><td class="${u.status==='Active'?'success':'danger'}">${u.status||''}</td></tr>`).join('');
+ $('empty').classList.toggle('hidden',list.length>0);
+}
+function download(filename,content,type){const blob=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function csvDownload(){
+ const fields=['id','name','email','venture','members','category','phone','city','plan','status'];
+ const rows=[fields.join(','),...users.map(u=>fields.map(f=>'"'+String(f==='members'?(u.members||[]).join(' | '):(u[f]||'')).replace(/"/g,'""')+'"').join(','))];
+ download('market-users.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+}
+function showApp(role,user){
+ currentRole=role;currentUser=user||null;
+ $('loginPage').classList.add('hidden');$('appPage').classList.remove('hidden');
+ $('roleBadge').textContent=role==='admin'?'Admin dashboard':'User dashboard';
+ $('usersTab').classList.toggle('hidden',role!=='admin');
+ $('addTab').textContent=role==='admin'?'Add User':'My Venture';
+ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+ document.querySelector('[data-page="dashboard"]').classList.add('active');
+ ['dashboard','analysis','users','add'].forEach(p=>$(p).classList.toggle('hidden',p!=='dashboard'));
+ if(role==='user'){
+   $('business').value=user.venture||'';
+   $('calculation').innerHTML='Welcome, '+esc(user.name)+'. Your venture: <b>'+esc(user.venture)+'</b>';
+   $('addForm').classList.add('hidden');
+ }else $('addForm').classList.remove('hidden');
+}
+function showLogin(){currentRole=null;currentUser=null;$('appPage').classList.add('hidden');$('loginPage').classList.remove('hidden');$('loginBox').classList.remove('hidden');$('registerBox').classList.add('hidden')}
+$('showRegister').onclick=()=>{$('loginBox').classList.add('hidden');$('registerBox').classList.remove('hidden');buildMemberFields()};
+$('backToLogin').onclick=showLogin;
+$('memberCount').onchange=buildMemberFields;
+function buildMemberFields(){
+ const count=Number($('memberCount').value);let out='';
+ for(let i=1;i<=count;i++)out+=`<label>Member ${i} Name</label><input id="member${i}" required>`;
+ $('memberFields').innerHTML=out;
+}
+$('registerForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const email=$('primaryEmail').value.trim().toLowerCase(),count=Number($('memberCount').value);
+ if(users.some(u=>u.email.toLowerCase()===email)){alert('Email already exists');return}
+ if(count<2||count>3){alert('A venture must have minimum 2 and maximum 3 members.');return}
+ const members=[];for(let i=1;i<=count;i++)members.push($('member'+i).value.trim());
+ users.push({id:1001+users.length,name:$('primaryName').value.trim(),email,password:$('primaryPassword').value,phone:'',city:$('ventureCity').value.trim(),plan:'Free',status:'Active',venture:$('ventureName').value.trim(),members});
+ saveUsers();
+ $('registerMessage').textContent='Venture account created successfully. You can now login.';
+ $('registerMessage').classList.remove('hidden');
+});
+$('combinedLoginForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const email=$('combinedEmail').value.trim().toLowerCase(),password=$('combinedPassword').value;
+ if(email==='admin@marketdemo.com'&&password==='admin123'){showApp('admin');return}
+ const user=users.find(u=>u.email.toLowerCase()===email&&u.password===password);
+ if(!user){$('loginError').textContent='Invalid email or password.';return}
+ showApp('user',user);
+});
+$('logout').onclick=showLogin;
+document.querySelectorAll('[data-page]').forEach(btn=>btn.onclick=()=>{
+ if(btn.classList.contains('hidden'))return;
+ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+ ['dashboard','analysis','users','add'].forEach(p=>$(p).classList.toggle('hidden',p!==btn.dataset.page));
+ if(btn.dataset.page==='users'&&currentRole==='admin')renderUsers();
+ if(btn.dataset.page==='analysis')renderAnalysis();
+ if(btn.dataset.page==='add'&&currentRole==='user'){
+   $('addMessage').textContent='Your venture: '+(currentUser?.venture||'')+' | Members: '+(currentUser?.members||[]).join(', ');
+   $('addMessage').classList.remove('hidden');
+ }
+});
+$('marketForm').addEventListener('submit',e=>{e.preventDefault();calculate();recordAnalysis()});
+$('analysisCsvBtn').onclick=analysisCsvDownload;
+$('clearAnalysisBtn').onclick=()=>{analyses=[];saveAnalyses();renderAnalysis()};
+$('area').addEventListener('change',()=>{$('customArea').classList.toggle('hidden',$('area').value!=='Custom Region')});
+$('downloadReport').onclick=()=>{
+ const r=lastReport;
+ const rows=[
+  ['Market Intelligence Report',''],
+  ['',''],
+  ['Business / Product',r.business||''],
+  ['Market Area',r.area||''],
+  ['Total Potential Customers',r.customers||0],
+  ['Annual Revenue per Customer (Rs.)',r.annualPrice||0],
+  ['SAM Percentage',(r.samPercent||0)+'%'],
+  ['SOM Percentage',(r.somPercent||0)+'%'],
+  ['',''],
+  ['Results',''],
+  ['TAM (Total Addressable Market)',money(r.tam||0)],
+  ['SAM (Serviceable Addressable Market)',money(r.sam||0)],
+  ['SOM (Serviceable Obtainable Market)',money(r.som||0)],
+  ['',''],
+  ['Generated on',new Date().toLocaleString('en-IN')]
+ ];
+ const html='<table border="1">'+rows.map(row=>'<tr>'+row.map(c=>'<td>'+esc(String(c))+'</td>').join('')+'</tr>').join('')+'</table>';
+ download('market-report.xls',html,'application/vnd.ms-excel');
+};
+$('search').addEventListener('input',renderUsers);$('csvBtn').onclick=csvDownload;$('jsonBtn').onclick=()=>download('market-users.json',JSON.stringify(users,null,2),'application/json');
+$('newMemberCount').addEventListener('change',()=>{
+ const isThree=$('newMemberCount').value==='3';
+ $('newMember3Wrap').classList.toggle('hidden',!isThree);
+ $('newMember3').required=isThree;
+});
+$('addForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const email=$('newEmail').value.trim().toLowerCase();
+ const count=Number($('newMemberCount').value);
+ if(users.some(u=>u.email.toLowerCase()===email)){alert('Email already exists');return}
+ if(count<2||count>3){alert('Members must be minimum 2 and maximum 3.');return}
+ const members=[$('newMember1').value.trim(),$('newMember2').value.trim()];
+ if(count===3)members.push($('newMember3').value.trim());
+ users.push({
+   id:1001+users.length,
+   name:members[0],
+   email,
+   phone:'',
+   city:$('newCity').value.trim(),
+   plan:'Free',
+   status:'Active',
+   venture:$('newVenture').value.trim(),
+   members,
+   category:$('newCategory').value.trim()
+ });
+ saveUsers();
+ e.target.reset();
+ $('newCity').value='Pune';
+ $('newMemberCount').value='2';
+ $('newMember3Wrap').classList.add('hidden');
+ $('newMember3').required=false;
+ $('addMessage').textContent='Venture saved successfully. The details are available in the Users Database.';
+ $('addMessage').classList.remove('hidden');
+ renderUsers();
+});
+currentRole='admin'; $('appPage').classList.remove('hidden'); $('loginPage').style.display='none'; $('usersTab').classList.remove('hidden'); $('addTab').classList.remove('hidden'); calculate();renderUsers();buildMemberFields();
+</script>
+</body>
+</html>
